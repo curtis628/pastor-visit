@@ -52,10 +52,14 @@ class IndexViewTests(TestCase):
         person = house.person_set.all().get()
         self.assertEqual(first_name, person.first_name)
         self.assertEqual(last_name, person.last_name)
+        self.assertEqual(f"{first_name} {last_name}", person.full_name)
+        self.assertEqual(person.full_name, house.owner_name())
 
         self.assertEqual(1, house.meeting_set.count())
         meeting = house.meeting_set.all().get()
         self.assertEqual(meeting_choice, meeting)
+        self.assertEqual(meeting_choice, house.upcoming_meeting())
+        self.assertEqual(person.full_name, meeting.owner_name())
 
         # When the next person comes to the site...
         response = self.client.get(reverse("index"))

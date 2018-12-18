@@ -1,7 +1,6 @@
 import logging
 from datetime import date, time, datetime, timedelta
 from enum import IntEnum
-from string import Template
 from typing import List
 
 
@@ -12,7 +11,8 @@ from django.utils import timezone
 
 from phonenumber_field.modelfields import PhoneNumberField
 
-DATE_FORMAT = "%Y-%m-%d %I:%M%p %Z"
+DATE_FORMAT = "%b. %-d, %Y %I:%M %p"
+TIME_ONLY_FORMAT = "%I:%M %p"
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,22 @@ class Household(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     address = models.TextField()
     notes = models.TextField(blank=True)
+
+    def owner_name(self):
+        owner_query = self.person_set.all()
+        return str(owner_query[0]) if owner_query else None
+
+    owner_name.admin_order_field = "person__first_name"  # type: ignore
+
+    def upcoming_meeting(self):
+        now = timezone.now()
+        upcoming_meeting = None
+        future_meetings = self.meeting_set.filter(start__gte=now).order_by("start")
+        if future_meetings:
+            upcoming_meeting = future_meetings[0]
+        return upcoming_meeting
+
+    upcoming_meeting.admin_order_field = "meeting__start"  # type: ignore
 
     def __str__(self):
         return self.address
@@ -67,11 +83,9 @@ class Weekdays(IntEnum):
 
 
 class Meeting(models.Model):
-    _STR_TEMPLATE = Template("$name: $start - $end")
-
     name = models.CharField(max_length=50)
     start = models.DateTimeField(validators=[validate_future_date])
-    end = models.DateTimeField()
+    end = models.DateTimeField(validators=[validate_future_date])
     reserved = models.DateTimeField(
         null=True, blank=True, validators=[validate_future_date]
     )
@@ -144,12 +158,25 @@ class Meeting(models.Model):
                         )
                         logger.info("Created %s", mtg)
 
+    def owner_name(self):
+        return self.household.owner_name() if self.household else None
+
+    owner_name.admin_order_field = "household__person__first_name"  # type: ignore
+
+    def full_name(self):
+        """Includes meeting name and start+end datetimes."""
+        return f"{self.name}: {str(self)}"
+
+    full_name.admin_order_field = "start"  # type: ignore
+
     def __str__(self):
         start_local = timezone.localtime(self.start)
+        start_str = start_local.strftime(DATE_FORMAT)
         end_local = timezone.localtime(self.end)
 
-        return self._STR_TEMPLATE.substitute(
-            name=self.name,
-            start=start_local.strftime(DATE_FORMAT),
-            end=end_local.strftime(DATE_FORMAT),
-        )
+        if start_local.day == end_local.day:
+            end_str = end_local.strftime(TIME_ONLY_FORMAT)
+            date_str = f"{start_str} - {end_str}"
+        else:
+            date_str = f"{start_str} - {end_local.strftime(DATE_FORMAT)}"
+        return date_str

@@ -74,6 +74,9 @@ class HouseholdModelTests(TestCase):
         self.assertEqual(address, household.address)
         self.assertEqual(address, str(household))
 
+        self.assertFalse(household.owner_name())
+        self.assertFalse(household.upcoming_meeting())
+
 
 class RecurringMeetingTestConfig:
     start_dt: Optional[date] = None
@@ -127,6 +130,7 @@ class MeetingModelTests(TestCase):
 
         self.assertEqual(1, Meeting.objects.count())
         self.assertEqual(address, meeting.household.address)
+        self.assertFalse(meeting.owner_name())
 
     def test_start_in_past(self):
         start = timezone.now() - timedelta(hours=1)
@@ -222,3 +226,19 @@ class MeetingModelTests(TestCase):
         for ndx, meeting in enumerate(jan_8_meetings):
             meeting_start = meeting.start.time()
             self.assertEqual(meeting_start, config.start_times[ndx])
+
+    def test_meeting_string(self):
+        next_year = timezone.now().year + 1
+        start: datetime = datetime(next_year, 1, 1, 19, 0, 0, tzinfo=pytz.utc)
+        end: datetime = start + timedelta(hours=1)
+        meeting = create_meeting(start, end)
+
+        self.assertEqual(f"Jan. 1, {next_year} 11:00 AM - 12:00 PM", str(meeting))
+        self.assertIn(f"Jan. 1, {next_year} 11:00 AM - 12:00 PM", meeting.full_name())
+
+        start = start + timedelta(days=1)
+        end = end + timedelta(days=2)
+        meeting = create_meeting(start, end)
+        self.assertEqual(
+            f"Jan. 2, {next_year} 11:00 AM - Jan. 3, {next_year} 12:00 PM", str(meeting)
+        )
