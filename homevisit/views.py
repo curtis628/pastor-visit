@@ -8,8 +8,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import HouseholdForm, OwnerForm
-from .models import Feedback
+from .forms import HouseholdForm, OwnerForm, FeedbackForm
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +69,7 @@ class AboutView(TemplateView):
 
 class FeedbackCreateView(CreateView):
     template_name = "homevisit/feedback.html"
-    model = Feedback
-    fields = ["name", "email", "phone_number", "issue", "feedback"]
+    form_class = FeedbackForm
     success_url = "/feedback/success"
 
 

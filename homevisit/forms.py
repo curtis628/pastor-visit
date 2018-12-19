@@ -3,10 +3,11 @@ import logging
 
 from django import forms
 from django.utils import timezone
+from django.urls import reverse
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field
+from crispy_forms.layout import Layout, Div, Field, Submit
 
-from .models import Household, Person, Meeting
+from .models import Household, Person, Meeting, Feedback
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,8 @@ class HouseholdForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(HouseholdForm, self).__init__(*args, **kwargs)
+        self.fields["address"].widget.attrs.update({"rows": "4"})
+
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout("address", "meeting")
@@ -79,3 +82,31 @@ class OwnerForm(forms.ModelForm):
                 css_class="row",
             ),
         )
+
+
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = ["name", "email", "phone_number", "issue", "feedback"]
+
+    def __init__(self, *args, **kwargs):
+        super(FeedbackForm, self).__init__(*args, **kwargs)
+        self.fields["feedback"].widget.attrs.update({"rows": "4"})
+
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.form_action = reverse("feedback")
+        self.helper.layout = Layout(
+            Div(
+                Field("name", wrapper_class="col-md-6"),
+                Field("email", wrapper_class="col-md-6"),
+                css_class="row",
+            ),
+            Div(
+                Field("phone_number", wrapper_class="col-md-6"),
+                Field("issue", wrapper_class="col-md-6"),
+                css_class="row",
+            ),
+            Div(Field("feedback", wrapper_class="col-md-12"), css_class="row"),
+        )
+        self.helper.add_input(Submit("submit", "Submit", css_class="btn-success"))
