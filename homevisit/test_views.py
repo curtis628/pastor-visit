@@ -22,10 +22,29 @@ class IndexViewTests(TestCase):
             "homevisit/index.html", [template.name for template in response.templates]
         )
 
+        # Ensure "no meetings error" is not displayed when there are meetings
+        self.assertNotIn("no_meetings_error", response.context)
+        self.assertIn("<form", str(response.content))
+
         self.assertIn("form", response.context)
         self.assertIsInstance(response.context["form"], HouseholdForm)
         self.assertIn("owner_form", response.context)
         self.assertIsInstance(response.context["owner_form"], OwnerForm)
+
+    def test_index_view_no_meetings(self):
+        # Delete the meetings created in setUp...
+        Meeting.objects.all().delete()
+
+        response = self.client.get(reverse("index"))
+        self.assertEqual(200, response.status_code)
+        self.assertIn(
+            "homevisit/index.html", [template.name for template in response.templates]
+        )
+
+        self.assertIn("no_meetings_error", response.context)
+        self.assertTrue(response.context["no_meetings_error"])
+        self.assertIn("No meetings are currently available", str(response.content))
+        self.assertNotIn("<form", str(response.content))
 
     def test_index_post(self):
         first_name = "TestFirst"

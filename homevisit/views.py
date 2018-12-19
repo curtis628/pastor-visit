@@ -21,6 +21,14 @@ class HouseholdCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["owner_form"] = OwnerForm(prefix="ownerForm")
+
+        household_form = context["form"]
+        meeting_field = household_form.fields["meeting"]
+        meeting_choices = [choice for choice in meeting_field.choices]
+        meeting_nums = len(meeting_choices)
+        if meeting_nums == 0:
+            logger.warning("There are no meetings to choose from!")
+            context["no_meetings_error"] = True
         return context
 
     @transaction.atomic
