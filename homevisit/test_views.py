@@ -3,7 +3,7 @@ import logging
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Household, Person, Meeting
+from .models import Household, Person, Meeting, Feedback
 from .forms import HouseholdForm, OwnerForm
 from .test_models import RecurringMeetingTestConfig, populate_example_meetings
 
@@ -144,3 +144,35 @@ class IndexViewTests(TestCase):
         # Verify User 2' data is not saved
         self.assertEqual(0, Person.objects.filter(first_name=user2_first_name).count())
         self.assertEqual(0, Household.objects.filter(address=user2_address).count())
+
+
+class FeedbackViewTests(TestCase):
+    def test_get(self):
+        response = self.client.get(reverse("feedback"))
+        self.assertEqual(200, response.status_code)
+        self.assertIn(
+            "homevisit/feedback.html", [template.name for template in response.templates]
+        )
+
+        self.assertIn("form", response.context)
+
+    def test_post(self):
+        name = "Test User"
+        email = "user@test.com"
+        feedback_content = "This is testing feedback"
+        data = {
+            "name": name,
+            "email": email,
+            "phone_number": "",
+            "issue": "GENERAL",
+            "feedback": feedback_content,
+        }
+        response = self.client.post(reverse("feedback"), data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertRedirects(response, reverse("feedback_success"))
+
+        self.assertEqual(1, Feedback.objects.count())
+        feedback = Feedback.objects.all().get()
+        self.assertEqual(name, feedback.name)
+        self.assertEqual(feedback_content, feedback.feedback)
+        self.assertEqual(f"{name}: {feedback.id}", str(feedback))

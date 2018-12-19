@@ -180,3 +180,26 @@ class Meeting(models.Model):
         else:
             date_str = f"{start_str} - {end_local.strftime(DATE_FORMAT)}"
         return date_str
+
+
+class Feedback(models.Model):
+    name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone_number = PhoneNumberField(blank=True)
+    feedback = models.TextField()
+    issue = models.CharField(
+        max_length=50,
+        choices=(
+            ("SCHEDULING", "I'm having problems scheduling"),
+            ("QUESTIONS", "I have some questions before I sign up"),
+            ("GENERAL", "I have some general feedback"),
+        ),
+    )
+    created_date = models.DateTimeField(auto_now_add=True)
+    responded = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Feedback"
+
+    def __str__(self):
+        return f"{self.name}: {self.id}"

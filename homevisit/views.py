@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import HouseholdForm, OwnerForm
+from .models import Feedback
 
 logger = logging.getLogger(__name__)
 
@@ -53,3 +54,18 @@ class HouseholdCreateView(CreateView):
 
 class SuccessView(TemplateView):
     template_name = "homevisit/success.html"
+
+
+class AboutView(TemplateView):
+    template_name = "homevisit/about.html"
+
+
+class FeedbackCreateView(CreateView):
+    template_name = "homevisit/feedback.html"
+    model = Feedback
+    fields = ["name", "email", "phone_number", "issue", "feedback"]
+    success_url = "/feedback/success"
+
+
+class FeedbackSuccessView(TemplateView):
+    template_name = "homevisit/feedback_success.html"

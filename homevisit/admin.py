@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group, User
 
-from .models import Household, Person, Meeting
+from .models import Household, Person, Meeting, Feedback
 
 
 class PersonInline(admin.TabularInline):
@@ -34,8 +34,25 @@ class MeetingAdmin(admin.ModelAdmin):
     ordering = ["start"]
 
 
+class FeedbackAdmin(admin.ModelAdmin):
+    model = Feedback
+    fields = ["name", "email", "phone_number", "issue", "feedback", "responded"]
+    list_display = (
+        "__str__",
+        "email",
+        "phone_number",
+        "created_date",
+        "issue",
+        "responded",
+    )
+    list_filter = ["created_date", "responded"]
+    ordering = ["-created_date"]
+    readonly_fields = ("feedback",)
+
+
 admin.site.register(Household, HouseholdAdmin)
 admin.site.register(Meeting, MeetingAdmin)
+admin.site.register(Feedback, FeedbackAdmin)
 
 # No need for User/Group management on our admin site
 admin.site.unregister(Group)

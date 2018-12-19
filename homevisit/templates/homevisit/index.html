@@ -3,10 +3,11 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+<h2 class="text-dark">Have Pastor Will Over to Your House</h2>
 <form action="{% url 'index' %}" method="post">
-    {% crispy owner_form %}
-    {% crispy form %}
-    <button type="submit" class="btn btn-success">Save</button>
+  {% crispy owner_form %}
+  {% crispy form %}
+  <button type="submit" class="btn btn-success">Save</button>
 </form>
 {% endblock %}
 
