@@ -8,6 +8,7 @@ from django.views.generic import CreateView
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib import messages
 
 from django.core.mail import send_mail
 from django.conf import settings
@@ -67,17 +68,20 @@ class HouseholdCreateView(CreateView):
                 meeting,
             )
 
+            msg = BODY.substitute(
+                name=owner.first_name, meeting=str(meeting), address=household.address
+            )
+            html_msg = msg.replace("\n", "<br>")
+            messages.info(request, html_msg, extra_tags="safe")
+
             if settings.EMAIL_HOST_USER:
-                body = BODY.substitute(
-                    name=owner.first_name, meeting=str(meeting), address=household.address
-                )
-                logger.debug("Sending email to %s with body:\n%s", owner.email, body)
+                logger.debug("Sending email to %s with body:\n%s", owner.email, msg)
                 send_mail(
                     SUBJECT,
-                    body,
+                    msg,
                     "homevisit@gmail.com",
                     [owner.email],
-                    html_message=body.replace("\n", "<br>"),
+                    html_message=html_msg,
                 )
             else:
                 logger.info("Email is disabled")

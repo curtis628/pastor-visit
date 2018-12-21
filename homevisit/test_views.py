@@ -74,6 +74,10 @@ class IndexViewTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertRedirects(response, reverse("success"))
 
+        # Ensure "success" page includes details about their reservation
+        self.assertIn(first_name, str(response.content))
+        self.assertIn(str(meeting_choice), str(response.content))
+
         self.assertEqual(1, Household.objects.count())
         house = Household.objects.all().get()
         self.assertEqual(address, house.address)

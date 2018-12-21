@@ -2,5 +2,12 @@
 
 {% block content %}
   <h3>Successful submission!</h1>
-  Thanks. We will be in touch soon.
+
+  {% if messages %}
+    {% for message in messages %}
+      <p{% if message.tags %} class="{{ message.level_tag }}"{% endif %}>
+        {% if 'safe' in message.tags %}{{ message|safe }}{% else %}{{ message }}{% endif %}
+      </p>
+    {% endfor %}
+  {% endif %}
 {% endblock %}
