@@ -10,4 +10,5 @@ urlpatterns = [
     path(
         "feedback/success", views.FeedbackSuccessView.as_view(), name="feedback_success"
     ),
+    path("faqs", views.FaqListView.as_view(), name="faqs"),
 ]

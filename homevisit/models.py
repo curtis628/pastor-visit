@@ -203,3 +203,17 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.name}: {self.id}"
+
+
+class Faq(models.Model):
+    short_name = models.CharField(max_length=50, primary_key=True)
+    question = models.CharField(max_length=100)
+    answer = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Frequently Asked Question"
+        verbose_name_plural = "Frequently Asked Questions"
+
+    def __str__(self):
+        return self.question

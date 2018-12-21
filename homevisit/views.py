@@ -4,6 +4,7 @@ from string import Template
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.views.generic.base import TemplateView
+from django.views.generic.list import ListView
 from django.views.generic import CreateView
 from django.shortcuts import render
 from django.urls import reverse
@@ -14,6 +15,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from .forms import HouseholdForm, OwnerForm, FeedbackForm
+from .models import Faq
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +110,8 @@ class FeedbackCreateView(CreateView):
 
 class FeedbackSuccessView(TemplateView):
     template_name = "homevisit/feedback_success.html"
+
+
+class FaqListView(ListView):
+    template_name = "homevisit/faqs.html"
+    model = Faq

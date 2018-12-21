@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group, User
 
-from .models import Household, Person, Meeting, Feedback
+from .models import Household, Person, Meeting, Faq, Feedback
 
 
 class PersonInline(admin.TabularInline):
@@ -50,9 +50,18 @@ class FeedbackAdmin(admin.ModelAdmin):
     readonly_fields = ("feedback",)
 
 
+class FaqAdmin(admin.ModelAdmin):
+    model = Feedback
+    fields = ["short_name", "question", "answer"]
+    list_display = ("question", "created_date")
+    list_filter = ["created_date"]
+    ordering = ["-created_date"]
+
+
 admin.site.register(Household, HouseholdAdmin)
 admin.site.register(Meeting, MeetingAdmin)
 admin.site.register(Feedback, FeedbackAdmin)
+admin.site.register(Faq, FaqAdmin)
 
 # No need for User/Group management on our admin site
 admin.site.unregister(Group)

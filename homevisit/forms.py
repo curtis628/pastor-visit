@@ -36,6 +36,7 @@ class HouseholdForm(forms.ModelForm):
         error_messages={
             "invalid_choice": "This meeting is not currently available. Please retry."
         },
+        help_text='<a href="/faqs#no-availability">What if none of these times work for me?</a>',  # noqa
     )
 
     class Meta:
