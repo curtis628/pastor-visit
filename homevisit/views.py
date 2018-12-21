@@ -1,4 +1,5 @@
 import logging
+from string import Template
 
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -8,9 +9,22 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
+from django.core.mail import send_mail
+from django.conf import settings
+
 from .forms import HouseholdForm, OwnerForm, FeedbackForm
 
 logger = logging.getLogger(__name__)
+
+SUBJECT = "Meeting scheduled with Will and Lindy!"
+BODY = Template(
+    "Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:\n\n"
+    "$address\n\n"
+    "If you need to cancel or change this meeting (or if you have any questions), "
+    'please <a href="http://localhost:8000/feedback">contact us on the website</a>.\n\n'
+    "Looking forward to seeing you!\n"
+    "Will and Lindy"
+)
 
 
 class HouseholdCreateView(CreateView):
@@ -52,6 +66,21 @@ class HouseholdCreateView(CreateView):
                 owner,
                 meeting,
             )
+
+            if settings.EMAIL_HOST_USER:
+                body = BODY.substitute(
+                    name=owner.first_name, meeting=str(meeting), address=household.address
+                )
+                logger.debug("Sending email to %s with body:\n%s", owner.email, body)
+                send_mail(
+                    SUBJECT,
+                    body,
+                    "homevisit@gmail.com",
+                    [owner.email],
+                    html_message=body.replace("\n", "<br>"),
+                )
+            else:
+                logger.info("Email is disabled")
 
             return HttpResponseRedirect(reverse("success"))
 

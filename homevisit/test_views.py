@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -6,6 +7,11 @@ from django.urls import reverse
 from .models import Household, Person, Meeting, Feedback
 from .forms import HouseholdForm, OwnerForm
 from .test_models import RecurringMeetingTestConfig, populate_example_meetings
+from .views import SUBJECT
+
+# Used to simulate tests around emails
+from django.conf import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,16 +52,21 @@ class IndexViewTests(TestCase):
         self.assertIn("No meetings are currently available", str(response.content))
         self.assertNotIn("<form", str(response.content))
 
-    def test_index_post(self):
+    @patch("homevisit.views.send_mail")
+    def test_index_post(self, mock_mail):
+        # Enable emails for this test
+        settings.EMAIL_HOST_USER = "test@email.com"
+
         first_name = "TestFirst"
         last_name = "TestLast"
+        email = "user@test.com"
         address = "Test Address"
         meeting_choice = Meeting.objects.all()[0]
         data = {
             "ownerForm-first_name": first_name,
             "ownerForm-last_name": last_name,
             "ownerForm-phone_number": "5307777777",
-            "ownerForm-email": "user@test.com",
+            "ownerForm-email": email,
             "address": address,
             "meeting": meeting_choice.id,
         }
@@ -80,6 +91,19 @@ class IndexViewTests(TestCase):
         self.assertEqual(meeting_choice, house.upcoming_meeting())
         self.assertEqual(person.full_name, meeting.owner_name())
 
+        # Test email called as expected
+        mock_mail.assert_called_once()
+        ordered_args = mock_mail.call_args[0]
+        self.assertEqual(SUBJECT, ordered_args[0])
+
+        email_body = ordered_args[1]
+        self.assertIn(first_name, email_body)
+        self.assertIn(str(meeting_choice), email_body)
+
+        self.assertIn(email, ordered_args[3])
+        kw_args = mock_mail.call_args[1]
+        self.assertIn("html_message", kw_args)
+
         # When the next person comes to the site...
         response = self.client.get(reverse("index"))
         self.assertEqual(200, response.status_code)
@@ -94,7 +118,11 @@ class IndexViewTests(TestCase):
         meeting_choice_ids = [_id for (_id, _) in choices]
         self.assertNotIn(meeting_choice.id, meeting_choice_ids)
 
-    def test_index_post_try_to_reserve_same_meeting(self):
+    @patch("homevisit.views.send_mail")
+    def test_index_post_try_to_reserve_same_meeting(self, mock_mail):
+        # Disable emails for this test
+        settings.EMAIL_HOST_USER = None
+
         # User1 and User2 will attempt to reserve this same meeting instance
         meeting_choice = Meeting.objects.all()[0]
 
@@ -163,6 +191,9 @@ class IndexViewTests(TestCase):
         # Verify User 2' data is not saved
         self.assertEqual(0, Person.objects.filter(first_name=user2_first_name).count())
         self.assertEqual(0, Household.objects.filter(address=user2_address).count())
+
+        # No emails are sent because they are disabled
+        mock_mail.assert_not_called()
 
 
 class FeedbackViewTests(TestCase):

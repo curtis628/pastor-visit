@@ -9,6 +9,7 @@
   {% else %}
     <h2 class="text-dark">Have Pastor Will Over to Your House</h2>
     <form action="{% url 'index' %}" method="post">
+      {% csrf_token %}
       {% crispy owner_form %}
       {% crispy form %}
       <button type="submit" class="btn btn-success">Save</button>
