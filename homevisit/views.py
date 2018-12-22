@@ -24,7 +24,7 @@ BODY = Template(
     "Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:\n\n"
     "$address\n\n"
     "If you need to cancel or change this meeting (or if you have any questions), "
-    'please <a href="http://localhost:8000/feedback">contact us on the website</a>.\n\n'
+    'please <a href="http://$host_name/feedback">contact us on the website</a>.\n\n'
     "Looking forward to seeing you!\n"
     "Will and Lindy"
 )
@@ -71,7 +71,10 @@ class HouseholdCreateView(CreateView):
             )
 
             msg = BODY.substitute(
-                name=owner.first_name, meeting=str(meeting), address=household.address
+                name=owner.first_name,
+                meeting=str(meeting),
+                address=household.address,
+                host_name=settings.HOST_NAME,
             )
             html_msg = msg.replace("\n", "<br>")
             messages.info(request, html_msg, extra_tags="safe")
