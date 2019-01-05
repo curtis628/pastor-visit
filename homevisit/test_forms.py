@@ -30,7 +30,9 @@ class OwnerFormTests(TestCase):
         self._verify_form(form_data, False)
 
     def test_valid(self):
-        form_data = dict(first_name="TestFirst", email="user@test.com")
+        form_data = dict(
+            first_name="TestFirst", last_name="TestLast", email="user@test.com"
+        )
         self._verify_form(form_data, True)
 
         form_data["last_name"] = "TestLast"
@@ -95,9 +97,9 @@ class HouseholdFormTests(TestCase):
     def test_form_hides_distant_future_choices(self):
         self._clean_setup_data()
 
-        # HouseholdForm only shows 8 weeks of meeting instances...
-        # ... so let's create 10 weeks of meeting instances to test it.
-        self.meeting_config.days = 7 * 10
+        # HouseholdForm only shows 12 weeks of meeting instances...
+        # ... so let's create 20 weeks of meeting instances to test it.
+        self.meeting_config.days = 7 * 20
         populate_example_meetings(self.meeting_config)
         form = HouseholdForm()
 

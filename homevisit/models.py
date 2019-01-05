@@ -53,7 +53,7 @@ class Person(models.Model):
         Household, on_delete=models.SET_NULL, null=True, blank=True
     )
     first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30, blank=True)
+    last_name = models.CharField(max_length=30)
     email = models.EmailField()
     phone_number = PhoneNumberField(blank=True)
     notes = models.TextField(blank=True)
@@ -127,18 +127,12 @@ class Meeting(models.Model):
             If not provided, timezone.now() is used.
         """
         logger.debug(
-            "Scheduling '%s' %s to %s meeting of length %s mins on [days=%s]. "
-            "Starting times: %s",
-            name,
-            begin_date,
-            end_date,
-            duration_mins,
-            weekdays,
-            start_times,
+            f"Scheduling '{name}' {begin_date} to {end_date} meeting of length "
+            f"{duration_mins} mins on [days={weekdays}]. Starting times: {start_times}"
         )
 
         _create_after: datetime = timezone.now() if create_after is None else create_after
-        initial_date: date = _create_after.date()
+        initial_date: date = begin_date
         delta = end_date - initial_date
         # Iterate over each day between _create_after and end_date
         for day_num in range(delta.days):
@@ -190,8 +184,9 @@ class Feedback(models.Model):
     issue = models.CharField(
         max_length=50,
         choices=(
-            ("SCHEDULING", "I'm having problems scheduling"),
             ("QUESTIONS", "I have some questions before I sign up"),
+            ("CANCEL", "I need to cancel or reschedule my existing meeting"),
+            ("SCHEDULING", "I'm having problems scheduling"),
             ("GENERAL", "I have some general feedback"),
         ),
     )

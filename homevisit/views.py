@@ -24,7 +24,7 @@ BODY = Template(
     "Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:\n\n"
     "$address\n\n"
     "If you need to cancel or change this meeting (or if you have any questions), "
-    'please <a href="http://$host_name/feedback">contact us on the website</a>.\n\n'
+    'please <a href="/feedback">contact us on the website</a>.\n\n'
     "Looking forward to seeing you!\n"
     "Will and Lindy"
 )
@@ -65,7 +65,7 @@ class HouseholdCreateView(CreateView):
             meeting.save()
             logger.info(
                 "Created [house=%s] with [owner=%s] [meeting=%s]",
-                household,
+                str(household).replace("\r\n", ". "),
                 owner,
                 meeting,
             )

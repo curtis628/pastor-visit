@@ -125,6 +125,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+X_FRAME_OPTIONS = "DENY"
+
 # Don't log to console during tests: https://stackoverflow.com/questions/5255657
 TESTING_MODE = len(sys.argv) > 1 and sys.argv[1] == "test"
 

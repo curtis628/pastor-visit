@@ -79,6 +79,7 @@ class HouseholdModelTests(TestCase):
 
 
 class RecurringMeetingTestConfig:
+    name: Optional[str] = None
     start_dt: Optional[date] = None
     days: int = 14
     duration_mins: int = 60
@@ -88,6 +89,12 @@ class RecurringMeetingTestConfig:
         time(20, 30, 0),  # after  "MOCK_NOW". 12:30PM PST
         time(22, 0, 0),  # after  "MOCK_NOW". 02:00PM PST
     ]
+
+    def __str__(self):
+        return (
+            f"{self.name}: [start={self.start_dt}] [days={self.days}] {self.weekdays}."
+            f"times: {self.start_times}"
+        )
 
 
 def populate_example_meetings(
@@ -106,10 +113,11 @@ def populate_example_meetings(
     NOTE: When creating mock meeting instances, we assume "now" is 1/1/2018 20:00 UTC
     """
     now = timezone.now() if mock_now is None else mock_now
+    name = config.name if config.name else "Test recurring meeting"
     start_dt: date = config.start_dt if config.start_dt else now.date()
     end_dt: date = start_dt + timedelta(days=config.days)
     Meeting.schedule_recurring(
-        "M/F Recurring for 2 weeks",
+        name,
         start_dt,
         end_dt,
         config.duration_mins,

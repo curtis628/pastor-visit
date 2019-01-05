@@ -5,8 +5,10 @@
 
   <ul>
     {% for faq in object_list %}
-      <h5 id="{{ faq.short_name }}">{{ faq.question }}</h5>
-      {{ faq.answer|safe }}
+      <div class="pb-4">
+        <h5 id="{{ faq.short_name }} class=">{{ faq.question }}</h5>
+        {{ faq.answer|safe }}
+      </div>
     {% empty %}
         <p>No FAQs yet.</p>
     {% endfor %}

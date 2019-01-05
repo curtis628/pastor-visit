@@ -144,6 +144,7 @@ class IndexViewTests(TestCase):
         user1_address = "User 1 Address"
         user1_data = {
             "ownerForm-first_name": user1_first_name,
+            "ownerForm-last_name": "LastName",
             "ownerForm-email": "user1@test.com",
             "ownerForm-phone_number": "",
             "address": user1_address,
@@ -154,6 +155,7 @@ class IndexViewTests(TestCase):
         user2_address = "User 2 Address"
         user2_data = {
             "ownerForm-first_name": user2_first_name,
+            "ownerForm-last_name": "LastName",
             "ownerForm-email": "user2@test.com",
             "ownerForm-phone_number": "",
             "address": user2_address,

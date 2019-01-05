@@ -47,7 +47,7 @@ class FeedbackAdmin(admin.ModelAdmin):
     )
     list_filter = ["created_date", "responded"]
     ordering = ["-created_date"]
-    readonly_fields = ("feedback",)
+    readonly_fields = ("issue", "feedback")
 
 
 class FaqAdmin(admin.ModelAdmin):
@@ -66,3 +66,5 @@ admin.site.register(Faq, FaqAdmin)
 # No need for User/Group management on our admin site
 admin.site.unregister(Group)
 admin.site.unregister(User)
+
+admin.site.site_header = "Homevisits Administration"

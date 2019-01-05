@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def get_meetings():
     now = timezone.now()
-    max_start = now + timedelta(weeks=8)
+    max_start = now + timedelta(weeks=12)
 
     mtg_query = (
         Meeting.objects.filter(start__gt=now)
@@ -55,7 +55,6 @@ class HouseholdForm(forms.ModelForm):
         super().clean()
         if "meeting" in self.cleaned_data:
             meeting_id = self.cleaned_data.get("meeting")
-            logger.debug("Validating [meeting_id=%s]", meeting_id)
             query = Meeting.objects.filter(pk=meeting_id).filter(household=None)
             self.cleaned_data["meeting_obj"] = query.get()
             logger.debug("HouseholdForm valid with cleaned_data: %s", self.cleaned_data)
