@@ -55,7 +55,8 @@ class IndexViewTests(TestCase):
     @patch("homevisit.views.send_mail")
     def test_index_post(self, mock_mail):
         # Enable emails for this test
-        settings.EMAIL_HOST_USER = "test@email.com"
+        test_email_user = "test@email.com"
+        settings.EMAIL_HOST_USER = test_email_user
 
         first_name = "TestFirst"
         last_name = "TestLast"
@@ -103,6 +104,9 @@ class IndexViewTests(TestCase):
         email_body = ordered_args[1]
         self.assertIn(first_name, email_body)
         self.assertIn(str(meeting_choice), email_body)
+
+        email_from = ordered_args[2]
+        self.assertEqual(test_email_user, email_from)
 
         self.assertIn(email, ordered_args[3])
         kw_args = mock_mail.call_args[1]

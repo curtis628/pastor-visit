@@ -84,7 +84,7 @@ class HouseholdCreateView(CreateView):
                 send_mail(
                     SUBJECT,
                     msg,
-                    "homevisit@gmail.com",
+                    settings.EMAIL_HOST_USER,
                     [owner.email],
                     html_message=html_msg,
                 )
