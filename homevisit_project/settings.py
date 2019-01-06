@@ -130,6 +130,9 @@ X_FRAME_OPTIONS = "DENY"
 # Don't log to console during tests: https://stackoverflow.com/questions/5255657
 TESTING_MODE = len(sys.argv) > 1 and sys.argv[1] == "test"
 
+if not TESTING_MODE:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 
 class NotInTestingFilter(Filter):
     def filter(self, record):

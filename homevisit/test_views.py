@@ -52,11 +52,11 @@ class IndexViewTests(TestCase):
         self.assertIn("No meetings are currently available", str(response.content))
         self.assertNotIn("<form", str(response.content))
 
-    @patch("homevisit.views.send_mail")
+    @patch("homevisit.views.EmailMessage")
     def test_index_post(self, mock_mail):
         # Enable emails for this test
-        test_email_user = "test@email.com"
-        settings.EMAIL_HOST_USER = test_email_user
+        test_from_email = "test@email.com"
+        settings.EMAIL_HOST_USER = test_from_email
 
         first_name = "TestFirst"
         last_name = "TestLast"
@@ -105,12 +105,10 @@ class IndexViewTests(TestCase):
         self.assertIn(first_name, email_body)
         self.assertIn(str(meeting_choice), email_body)
 
-        email_from = ordered_args[2]
-        self.assertEqual(test_email_user, email_from)
-
-        self.assertIn(email, ordered_args[3])
         kw_args = mock_mail.call_args[1]
-        self.assertIn("html_message", kw_args)
+        self.assertEqual(test_from_email, kw_args["from_email"])
+        self.assertEqual([email], kw_args["to"])
+        self.assertEqual([test_from_email], kw_args["cc"])
 
         # When the next person comes to the site...
         response = self.client.get(reverse("index"))
@@ -126,7 +124,7 @@ class IndexViewTests(TestCase):
         meeting_choice_ids = [_id for (_id, _) in choices]
         self.assertNotIn(meeting_choice.id, meeting_choice_ids)
 
-    @patch("homevisit.views.send_mail")
+    @patch("homevisit.views.EmailMessage")
     def test_index_post_try_to_reserve_same_meeting(self, mock_mail):
         # Disable emails for this test
         settings.EMAIL_HOST_USER = None
@@ -216,7 +214,12 @@ class FeedbackViewTests(TestCase):
 
         self.assertIn("form", response.context)
 
-    def test_post(self):
+    @patch("homevisit.views.EmailMessage")
+    def test_post(self, mock_mail):
+        # Enable emails for this test
+        test_from_email = "test@email.com"
+        settings.EMAIL_HOST_USER = test_from_email
+
         name = "Test User"
         email = "user@test.com"
         feedback_content = "This is testing feedback"
@@ -236,3 +239,18 @@ class FeedbackViewTests(TestCase):
         self.assertEqual(name, feedback.name)
         self.assertEqual(feedback_content, feedback.feedback)
         self.assertEqual(f"{name}: {feedback.id}", str(feedback))
+
+        # Test email called as expected
+        mock_mail.assert_called_once()
+        ordered_args = mock_mail.call_args[0]
+        subject = ordered_args[0]
+        self.assertIn("Homevisit Feedback", subject)
+        self.assertIn(name, subject)
+
+        email_body = ordered_args[1]
+        self.assertIn(name, email_body)
+        self.assertIn(feedback_content, email_body)
+
+        kw_args = mock_mail.call_args[1]
+        self.assertEqual(email, kw_args["from_email"])
+        self.assertEqual([test_from_email], kw_args["to"])

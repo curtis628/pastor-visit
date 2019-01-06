@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib import messages
 
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.conf import settings
 
 from .forms import HouseholdForm, OwnerForm, FeedbackForm
@@ -24,9 +24,17 @@ BODY = Template(
     "Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:\n\n"
     "$address\n\n"
     "If you need to cancel or change this meeting (or if you have any questions), "
-    'please <a href="/feedback">contact us on the website</a>.\n\n'
+    'please <a href="$url/feedback">contact us on the website</a>.\n\n'
     "Looking forward to seeing you!\n"
     "Will and Lindy"
+)
+
+FEEDBACK_SUBJECT = Template("Homevisit Feedback from $name")
+FEEDBACK_BODY = Template(
+    "$name just sent some feedback about: $issue\n"
+    "Email: $email\n"
+    "Phone: $phone_number\n\n"
+    "$feedback"
 )
 
 
@@ -71,6 +79,7 @@ class HouseholdCreateView(CreateView):
             )
 
             msg = BODY.substitute(
+                url=f"http://{settings.HOST_NAME}",
                 name=owner.first_name,
                 meeting=str(meeting),
                 address=household.address,
@@ -80,16 +89,18 @@ class HouseholdCreateView(CreateView):
             messages.info(request, html_msg, extra_tags="safe")
 
             if settings.EMAIL_HOST_USER:
-                logger.debug("Sending email to %s with body:\n%s", owner.email, msg)
-                send_mail(
+                logger.debug("Emailing new appt. to %s with body:\n%s", owner.email, msg)
+                email = EmailMessage(
                     SUBJECT,
-                    msg,
-                    settings.EMAIL_HOST_USER,
-                    [owner.email],
-                    html_message=html_msg,
+                    html_msg,
+                    from_email=settings.EMAIL_HOST_USER,
+                    to=[owner.email],
+                    cc=[settings.EMAIL_HOST_USER],
                 )
+                email.content_subtype = "html"
+                email.send(fail_silently=False)
             else:
-                logger.info("Email is disabled")
+                logger.info("Received new household (but email is disabled)")
 
             return HttpResponseRedirect(reverse("success"))
 
@@ -114,6 +125,29 @@ class FeedbackCreateView(CreateView):
     template_name = "homevisit/feedback.html"
     form_class = FeedbackForm
     success_url = "/feedback/success"
+
+    def form_valid(self, form):
+        if settings.EMAIL_HOST_USER:
+            subject = FEEDBACK_SUBJECT.substitute(name=form.cleaned_data["name"])
+            msg = FEEDBACK_BODY.substitute(
+                name=form.cleaned_data["name"],
+                issue=form.cleaned_data["issue"],
+                email=form.cleaned_data["email"],
+                phone_number=form.cleaned_data["phone_number"],
+                feedback=form.cleaned_data["feedback"],
+            )
+
+            logger.debug("Sending feedback email: %s\n%s", subject, msg)
+            email = EmailMessage(
+                subject,
+                msg,
+                from_email=form.cleaned_data["email"],
+                to=[settings.EMAIL_HOST_USER],
+            )
+            email.send(fail_silently=False)
+        else:
+            logger.info("Received new feedback (but email is disabled)")
+        return super().form_valid(form)
 
 
 class FeedbackSuccessView(TemplateView):
