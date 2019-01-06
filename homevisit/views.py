@@ -104,6 +104,11 @@ class SuccessView(TemplateView):
 class AboutView(TemplateView):
     template_name = "homevisit/about.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["about"] = Faq.objects.filter(short_name="about").first()
+        return context
+
 
 class FeedbackCreateView(CreateView):
     template_name = "homevisit/feedback.html"
@@ -118,3 +123,4 @@ class FeedbackSuccessView(TemplateView):
 class FaqListView(ListView):
     template_name = "homevisit/faqs.html"
     model = Faq
+    queryset = Faq.objects.exclude(short_name="about")
