@@ -204,12 +204,12 @@ class IndexViewTests(TestCase):
         mock_mail.assert_not_called()
 
 
-class FeedbackViewTests(TestCase):
+class ContactUsViewTests(TestCase):
     def test_get(self):
-        response = self.client.get(reverse("feedback"))
+        response = self.client.get(reverse("contact"))
         self.assertEqual(200, response.status_code)
         self.assertIn(
-            "homevisit/feedback.html", [template.name for template in response.templates]
+            "homevisit/contact.html", [template.name for template in response.templates]
         )
 
         self.assertIn("form", response.context)
@@ -222,25 +222,25 @@ class FeedbackViewTests(TestCase):
 
         name = "Test User"
         email = "user@test.com"
-        feedback_content = "This is testing feedback"
+        comment = "This is testing contact us page"
         data = {
             "name": name,
             "email": email,
             "phone_number": "",
             "issue": "GENERAL",
-            "feedback": feedback_content,
+            "comment": comment,
         }
-        response = self.client.post(reverse("feedback"), data, follow=True)
+        response = self.client.post(reverse("contact"), data, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertRedirects(response, reverse("feedback_success"))
+        self.assertRedirects(response, reverse("contact_success"))
 
         self.assertEqual(1, Feedback.objects.count())
         feedback = Feedback.objects.all().get()
         self.assertEqual(name, feedback.name)
-        self.assertEqual(feedback_content, feedback.feedback)
+        self.assertEqual(comment, feedback.comment)
         self.assertEqual(f"{name}: {feedback.id}", str(feedback))
 
-        # Test email called as expected
+        # Test email sent to site owner as expected
         mock_mail.assert_called_once()
         ordered_args = mock_mail.call_args[0]
         subject = ordered_args[0]
@@ -249,7 +249,7 @@ class FeedbackViewTests(TestCase):
 
         email_body = ordered_args[1]
         self.assertIn(name, email_body)
-        self.assertIn(feedback_content, email_body)
+        self.assertIn(comment, email_body)
 
         kw_args = mock_mail.call_args[1]
         self.assertEqual(email, kw_args["from_email"])

@@ -36,7 +36,7 @@ class MeetingAdmin(admin.ModelAdmin):
 
 class FeedbackAdmin(admin.ModelAdmin):
     model = Feedback
-    fields = ["name", "email", "phone_number", "issue", "feedback", "responded"]
+    fields = ["name", "email", "phone_number", "issue", "comment", "responded"]
     list_display = (
         "__str__",
         "email",
@@ -47,7 +47,7 @@ class FeedbackAdmin(admin.ModelAdmin):
     )
     list_filter = ["created_date", "responded"]
     ordering = ["-created_date"]
-    readonly_fields = ("issue", "feedback")
+    readonly_fields = ("issue", "comment")
 
 
 class FaqAdmin(admin.ModelAdmin):

@@ -24,7 +24,7 @@ BODY = Template(
     "Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:\n\n"
     "$address\n\n"
     "If you need to cancel or change this meeting (or if you have any questions), "
-    'please <a href="$url/feedback">contact us on the website</a>.\n\n'
+    'please <a href="$url/contact">contact us on the website</a>.\n\n'
     "Looking forward to seeing you!\n"
     "Will and Lindy"
 )
@@ -34,7 +34,7 @@ FEEDBACK_BODY = Template(
     "$name just sent some feedback about: $issue\n"
     "Email: $email\n"
     "Phone: $phone_number\n\n"
-    "$feedback"
+    "$comment"
 )
 
 
@@ -121,10 +121,10 @@ class AboutView(TemplateView):
         return context
 
 
-class FeedbackCreateView(CreateView):
-    template_name = "homevisit/feedback.html"
+class ContactUsCreateView(CreateView):
+    template_name = "homevisit/contact.html"
     form_class = FeedbackForm
-    success_url = "/feedback/success"
+    success_url = "/contact/success"
 
     def form_valid(self, form):
         if settings.EMAIL_HOST_USER:
@@ -134,7 +134,7 @@ class FeedbackCreateView(CreateView):
                 issue=form.cleaned_data["issue"],
                 email=form.cleaned_data["email"],
                 phone_number=form.cleaned_data["phone_number"],
-                feedback=form.cleaned_data["feedback"],
+                comment=form.cleaned_data["comment"],
             )
 
             logger.debug("Sending feedback email: %s\n%s", subject, msg)
@@ -150,8 +150,8 @@ class FeedbackCreateView(CreateView):
         return super().form_valid(form)
 
 
-class FeedbackSuccessView(TemplateView):
-    template_name = "homevisit/feedback_success.html"
+class ContactUsSuccessView(TemplateView):
+    template_name = "homevisit/contact_success.html"
 
 
 class FaqListView(ListView):

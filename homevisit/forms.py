@@ -87,15 +87,15 @@ class OwnerForm(forms.ModelForm):
 class FeedbackForm(forms.ModelForm):
     class Meta:
         model = Feedback
-        fields = ["name", "email", "phone_number", "issue", "feedback"]
+        fields = ["name", "email", "phone_number", "issue", "comment"]
 
     def __init__(self, *args, **kwargs):
         super(FeedbackForm, self).__init__(*args, **kwargs)
-        self.fields["feedback"].widget.attrs.update({"rows": "4"})
+        self.fields["comment"].widget.attrs.update({"rows": "4"})
 
         self.helper = FormHelper()
         self.helper.form_method = "post"
-        self.helper.form_action = reverse("feedback")
+        self.helper.form_action = reverse("contact")
         self.helper.layout = Layout(
             Div(
                 Field("name", wrapper_class="col-md-6"),
@@ -107,6 +107,6 @@ class FeedbackForm(forms.ModelForm):
                 Field("issue", wrapper_class="col-md-6"),
                 css_class="row",
             ),
-            Div(Field("feedback", wrapper_class="col-md-12"), css_class="row"),
+            Div(Field("comment", wrapper_class="col-md-12"), css_class="row"),
         )
         self.helper.add_input(Submit("submit", "Submit", css_class="btn-success"))

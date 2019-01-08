@@ -180,7 +180,7 @@ class Feedback(models.Model):
     name = models.CharField(max_length=50)
     email = models.EmailField()
     phone_number = PhoneNumberField(blank=True)
-    feedback = models.TextField()
+    comment = models.TextField()
     issue = models.CharField(
         max_length=50,
         choices=(
