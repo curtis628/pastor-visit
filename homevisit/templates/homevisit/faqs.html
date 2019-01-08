@@ -1,18 +1,12 @@
 {% extends 'homevisit/base.html' %}
 
+{% block title %}Frequently Asked Questions{% endblock %}
+
 {% block content %}
-  <h3 class="mb-5">Frequently Asked Questions</h1>
-
-  <ul>
-    {% for faq in object_list %}
-      <div class="pb-4">
-        <h5 id="{{ faq.short_name }} class=">{{ faq.question }}</h5>
-        {{ faq.answer|safe }}
-      </div>
-    {% empty %}
-        <p>No FAQs yet.</p>
-    {% endfor %}
-  </ul>
-  
-
+  {% for faq in object_list %}
+    <h5 id="{{ faq.short_name }}" class="text-secondary pt-2">{{ faq.question }}</h5>
+    {{ faq.answer|safe }}
+  {% empty %}
+      <p>No FAQs yet.</p>
+  {% endfor %}
 {% endblock %}

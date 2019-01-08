@@ -2,12 +2,12 @@
 
 {% load crispy_forms_tags %}
 
-{% block content %}
+{% block title %}Schedule a Visit{% endblock %}
 
+{% block content %}
   {% if no_meetings_error %}
     {% include "homevisit/no_meetings.html" %}
   {% else %}
-    <h2 class="text-dark">Have Pastor Will Over to Your House</h2>
     <form action="{% url 'index' %}" method="post">
       {% csrf_token %}
       {% crispy owner_form %}
@@ -15,6 +15,5 @@
       <button type="submit" class="btn btn-success">Submit</button>
     </form>
   {% endif %}
-
 {% endblock %}
 
