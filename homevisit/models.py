@@ -11,8 +11,8 @@ from django.utils import timezone
 
 from phonenumber_field.modelfields import PhoneNumberField
 
-DATE_FORMAT = "%b. %-d, %Y %I:%M %p"
-TIME_ONLY_FORMAT = "%I:%M %p"
+DATE_FORMAT = "%a, %b. %-d, %Y %-I:%M %p"
+TIME_ONLY_FORMAT = "%-I:%M %p"
 
 logger = logging.getLogger(__name__)
 

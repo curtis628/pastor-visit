@@ -241,12 +241,22 @@ class MeetingModelTests(TestCase):
         end: datetime = start + timedelta(hours=1)
         meeting = create_meeting(start, end)
 
-        self.assertEqual(f"Jan. 1, {next_year} 11:00 AM - 12:00 PM", str(meeting))
-        self.assertIn(f"Jan. 1, {next_year} 11:00 AM - 12:00 PM", meeting.full_name())
+        weekday = Weekdays(start.weekday())
+        self.assertEqual(
+            f"{weekday.name.capitalize()}, Jan. 1, {next_year} 11:00 AM - 12:00 PM",
+            str(meeting),
+        )
+        self.assertIn(meeting.name, meeting.full_name())
+        self.assertIn(str(meeting), meeting.full_name())
 
+        # Test a meeting that spans multiple days...
         start = start + timedelta(days=1)
+        start_weekday = Weekdays(start.weekday())
         end = end + timedelta(days=2)
+        end_weekday = Weekdays(end.weekday())
         meeting = create_meeting(start, end)
         self.assertEqual(
-            f"Jan. 2, {next_year} 11:00 AM - Jan. 3, {next_year} 12:00 PM", str(meeting)
+            f"{start_weekday.name.capitalize()}, Jan. 2, {next_year} 11:00 AM - "
+            f"{end_weekday.name.capitalize()}, Jan. 3, {next_year} 12:00 PM",
+            str(meeting),
         )
