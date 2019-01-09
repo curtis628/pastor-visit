@@ -37,6 +37,22 @@ FEEDBACK_BODY = Template(
     "$comment"
 )
 
+FEEDBACK_ACK_SUBJECT = Template("Thanks for your home visit feedback, $name")
+FEEDBACK_ACK_BODY = Template(
+    "This is an auto-generated message letting you know that we received your feedback:"
+    "\n\n$comment\n\n"
+    "We will look at this soon and get back to you if we need to. Thanks!"
+    "Will and Lindy"
+)
+
+
+def send_email(subject, body, from_email, to_email, cc_emails=[]):
+    email = EmailMessage(
+        subject, body, from_email=from_email, to=[to_email], cc=cc_emails
+    )
+    email.content_subtype = "html"
+    email.send(fail_silently=False)
+
 
 class HouseholdCreateView(CreateView):
     template_name = "homevisit/index.html"
@@ -90,15 +106,13 @@ class HouseholdCreateView(CreateView):
 
             if settings.EMAIL_HOST_USER:
                 logger.debug("Emailing new appt. to %s with body:\n%s", owner.email, msg)
-                email = EmailMessage(
+                send_email(
                     SUBJECT,
                     html_msg,
                     from_email=settings.EMAIL_HOST_USER,
-                    to=[owner.email],
-                    cc=[settings.EMAIL_HOST_USER],
+                    to_email=owner.email,
+                    cc_emails=[settings.EMAIL_HOST_USER],
                 )
-                email.content_subtype = "html"
-                email.send(fail_silently=False)
             else:
                 logger.info("Received new household (but email is disabled)")
 
@@ -137,14 +151,26 @@ class ContactUsCreateView(CreateView):
                 comment=form.cleaned_data["comment"],
             )
 
-            logger.debug("Sending feedback email: %s\n%s", subject, msg)
-            email = EmailMessage(
+            logger.debug("Sending feedback email to site owner: %s\n%s", subject, msg)
+            send_email(
                 subject,
                 msg,
                 from_email=form.cleaned_data["email"],
-                to=[settings.EMAIL_HOST_USER],
+                to_email=settings.EMAIL_HOST_USER,
             )
-            email.send(fail_silently=False)
+
+            ack_subject = FEEDBACK_ACK_SUBJECT.substitute(name=form.cleaned_data["name"])
+            ack_msg = FEEDBACK_ACK_BODY.substitute(comment=form.cleaned_data["comment"])
+
+            logger.debug(
+                "Sending feedback ack email to user: %s\n%s", ack_subject, ack_msg
+            )
+            send_email(
+                ack_subject,
+                ack_msg,
+                from_email=settings.EMAIL_HOST_USER,
+                to_email=form.cleaned_data["email"],
+            )
         else:
             logger.info("Received new feedback (but email is disabled)")
         return super().form_valid(form)

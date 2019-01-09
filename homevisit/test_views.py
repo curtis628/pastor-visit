@@ -55,8 +55,8 @@ class IndexViewTests(TestCase):
     @patch("homevisit.views.EmailMessage")
     def test_index_post(self, mock_mail):
         # Enable emails for this test
-        test_from_email = "test@email.com"
-        settings.EMAIL_HOST_USER = test_from_email
+        site_owner_email = "site_owner@email.com"
+        settings.EMAIL_HOST_USER = site_owner_email
 
         first_name = "TestFirst"
         last_name = "TestLast"
@@ -106,9 +106,9 @@ class IndexViewTests(TestCase):
         self.assertIn(str(meeting_choice), email_body)
 
         kw_args = mock_mail.call_args[1]
-        self.assertEqual(test_from_email, kw_args["from_email"])
+        self.assertEqual(site_owner_email, kw_args["from_email"])
         self.assertEqual([email], kw_args["to"])
-        self.assertEqual([test_from_email], kw_args["cc"])
+        self.assertEqual([site_owner_email], kw_args["cc"])
 
         # When the next person comes to the site...
         response = self.client.get(reverse("index"))
@@ -217,8 +217,8 @@ class ContactUsViewTests(TestCase):
     @patch("homevisit.views.EmailMessage")
     def test_post(self, mock_mail):
         # Enable emails for this test
-        test_from_email = "test@email.com"
-        settings.EMAIL_HOST_USER = test_from_email
+        site_owner_email = "site_owner@email.com"
+        settings.EMAIL_HOST_USER = site_owner_email
 
         name = "Test User"
         email = "user@test.com"
@@ -240,9 +240,13 @@ class ContactUsViewTests(TestCase):
         self.assertEqual(comment, feedback.comment)
         self.assertEqual(f"{name}: {feedback.id}", str(feedback))
 
-        # Test email sent to site owner as expected
-        mock_mail.assert_called_once()
-        ordered_args = mock_mail.call_args[0]
+        # Test emails sent as expected: one to site owner; one to user
+        email_calls = mock_mail.call_args_list
+        self.assertEqual(2, len(email_calls))
+
+        # Ensure site owner email sent correctly
+        site_owner_call = email_calls[0]
+        ordered_args = site_owner_call[0]
         subject = ordered_args[0]
         self.assertIn("Homevisit Feedback", subject)
         self.assertIn(name, subject)
@@ -251,6 +255,20 @@ class ContactUsViewTests(TestCase):
         self.assertIn(name, email_body)
         self.assertIn(comment, email_body)
 
-        kw_args = mock_mail.call_args[1]
+        kw_args = site_owner_call[1]
         self.assertEqual(email, kw_args["from_email"])
-        self.assertEqual([test_from_email], kw_args["to"])
+        self.assertEqual([site_owner_email], kw_args["to"])
+
+        # Ensure acknowledgement email sent correctly
+        ack_call = email_calls[1]
+        ordered_args = ack_call[0]
+        subject = ordered_args[0]
+        self.assertIn("Thanks for your home visit feedback", subject)
+        self.assertIn(name, subject)
+
+        email_body = ordered_args[1]
+        self.assertIn(comment, email_body)
+
+        kw_args = ack_call[1]
+        self.assertEqual(site_owner_email, kw_args["from_email"])
+        self.assertEqual([email], kw_args["to"])
