@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 
 SUBJECT = "Meeting scheduled with Will and Lindy!"
 BODY = Template(
-    "<p>Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:<br>"
-    "$address"
-    "</p><p>If you need to cancel or change this meeting (or if you have any questions), "
+    "<p>Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:</p>"
+    "<blockquote>$address</blockquote>"
+    "<p>If you need to cancel or change this meeting (or if you have any questions), "
     'please <a href="$url/contact">contact us on the website</a>.</p>'
     "<p>Looking forward to seeing you!<br>"
     "-Will and Lindy</p>"
