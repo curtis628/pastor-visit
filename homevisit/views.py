@@ -21,28 +21,31 @@ logger = logging.getLogger(__name__)
 
 SUBJECT = "Meeting scheduled with Will and Lindy!"
 BODY = Template(
-    "Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:\n\n"
-    "$address\n\n"
-    "If you need to cancel or change this meeting (or if you have any questions), "
-    'please <a href="$url/contact">contact us on the website</a>.\n\n'
-    "Looking forward to seeing you!\n"
-    "Will and Lindy"
+    "<p>Thanks, $name! You're all set for Lindy and I to visit you on $meeting at:<br>"
+    "$address"
+    "</p><p>If you need to cancel or change this meeting (or if you have any questions), "
+    'please <a href="$url/contact">contact us on the website</a>.</p>'
+    "<p>Looking forward to seeing you!<br>"
+    "-Will and Lindy</p>"
 )
 
 FEEDBACK_SUBJECT = Template("Homevisit Feedback from $name")
 FEEDBACK_BODY = Template(
-    "$name just sent some feedback about: $issue\n"
-    "Email: $email\n"
-    "Phone: $phone_number\n\n"
-    "$comment"
+    "<p>$name just sent some feedback about: $issue"
+    "<ul>"
+    "<li>Email: $email\n"
+    "<li>Phone: $phone_number"
+    "</ul></p>"
+    "<p>Feedback:</p>"
+    "<blockquote>$comment</blockquote>"
 )
 
 FEEDBACK_ACK_SUBJECT = Template("Thanks for your home visit feedback, $name")
 FEEDBACK_ACK_BODY = Template(
-    "This is an auto-generated message letting you know that we received your feedback:"
-    "\n\n$comment\n\n"
-    "We will look at this soon and get back to you if we need to. Thanks!"
-    "Will and Lindy"
+    "<p>This is an auto-generated message so you know that we received your feedback:</p>"
+    "<blockquote>$comment</blockquote>"
+    "<p>We will look at this soon and get back to you if we need to. Thanks!<br>"
+    "-Will and Lindy</p>"
 )
 
 
@@ -100,15 +103,14 @@ class HouseholdCreateView(CreateView):
                 meeting=str(meeting),
                 address=household.address,
                 host_name=settings.HOST_NAME,
-            )
-            html_msg = msg.replace("\n", "<br>")
-            messages.info(request, html_msg, extra_tags="safe")
+            ).replace("\n", "<br>")
+            messages.info(request, msg, extra_tags="safe")
 
             if settings.EMAIL_HOST_USER:
                 logger.debug("Emailing new appt. to %s with body:\n%s", owner.email, msg)
                 send_email(
                     SUBJECT,
-                    html_msg,
+                    msg,
                     from_email=settings.EMAIL_HOST_USER,
                     to_email=owner.email,
                     cc_emails=[settings.EMAIL_HOST_USER],
@@ -149,7 +151,7 @@ class ContactUsCreateView(CreateView):
                 email=form.cleaned_data["email"],
                 phone_number=form.cleaned_data["phone_number"],
                 comment=form.cleaned_data["comment"],
-            )
+            ).replace("\n", "<br>")
 
             logger.debug("Sending feedback email to site owner: %s\n%s", subject, msg)
             send_email(
@@ -160,7 +162,9 @@ class ContactUsCreateView(CreateView):
             )
 
             ack_subject = FEEDBACK_ACK_SUBJECT.substitute(name=form.cleaned_data["name"])
-            ack_msg = FEEDBACK_ACK_BODY.substitute(comment=form.cleaned_data["comment"])
+            ack_msg = FEEDBACK_ACK_BODY.substitute(
+                comment=form.cleaned_data["comment"]
+            ).replace("\n", "<br>")
 
             logger.debug(
                 "Sending feedback ack email to user: %s\n%s", ack_subject, ack_msg
