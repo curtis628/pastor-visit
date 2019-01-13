@@ -98,7 +98,7 @@ class Meeting(models.Model):
         null=True, blank=True, validators=[validate_future_date]
     )
     household = models.ForeignKey(
-        Household, on_delete=models.CASCADE, null=True, blank=True
+        Household, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def clean(self):
