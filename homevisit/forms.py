@@ -21,6 +21,7 @@ def get_meetings():
         Meeting.objects.filter(start__gt=now)
         .filter(start__lt=max_start)
         .filter(household=None)
+        .order_by("start")
     )
 
     weeks_list = []
