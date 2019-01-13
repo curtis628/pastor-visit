@@ -6,14 +6,17 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('homevisit', '0004_feedback_field_renamed_comment'),
-    ]
+    dependencies = [("homevisit", "0004_feedback_field_renamed_comment")]
 
     operations = [
         migrations.AlterField(
-            model_name='meeting',
-            name='household',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='homevisit.Household'),
-        ),
+            model_name="meeting",
+            name="household",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="homevisit.Household",
+            ),
+        )
     ]

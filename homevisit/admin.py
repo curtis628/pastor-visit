@@ -20,9 +20,20 @@ class MeetingInline(admin.TabularInline):
 class HouseholdAdmin(admin.ModelAdmin):
     fields = ["address"]
     inlines = [PersonInline, MeetingInline]
-    list_display = ("address", "owner_name", "owner_phone", "upcoming_meeting", "created_date")
+    list_display = (
+        "address",
+        "owner_name",
+        "owner_phone",
+        "upcoming_meeting",
+        "created_date",
+    )
     list_filter = ["created_date"]
-    search_fields = ["address", "person__first_name", "person__last_name", "person__phone_number"]
+    search_fields = [
+        "address",
+        "person__first_name",
+        "person__last_name",
+        "person__phone_number",
+    ]
     ordering = ["meeting__start"]
 
 
