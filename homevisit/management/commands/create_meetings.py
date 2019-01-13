@@ -39,7 +39,7 @@ class Command(BaseCommand):
         cancel_date_pst = pacific.localize(datetime(2019, 3, 19, 0, 0))
         cancel = Meeting.objects.filter(start__gte=cancel_date_pst)[0]
         cancel.delete()
-        self.stdout.write(self.style.SUCCESS("Canceling 3/29 Meeting..."))
+        self.stdout.write(self.style.SUCCESS("Canceling 3/19 Meeting..."))
 
         self.stdout.write(
             self.style.SUCCESS("Successfully created all meeting instances")

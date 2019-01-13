@@ -2,6 +2,7 @@ from datetime import timedelta
 import logging
 
 from django import forms
+from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
 from crispy_forms.helper import FormHelper
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def get_meetings():
     now = timezone.now()
-    max_start = now + timedelta(weeks=12)
+    max_start = now + timedelta(weeks=settings.HOMEVISIT_HIDE_WEEKS_AFTER)
 
     mtg_query = (
         Meeting.objects.filter(start__gt=now)

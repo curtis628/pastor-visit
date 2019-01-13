@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.conf import settings
 
 from .forms import OwnerForm, HouseholdForm
 from .models import Meeting
@@ -99,6 +100,7 @@ class HouseholdFormTests(TestCase):
 
         # HouseholdForm only shows 12 weeks of meeting instances...
         # ... so let's create 20 weeks of meeting instances to test it.
+        settings.HOMEVISIT_HIDE_WEEKS_AFTER = 12
         self.meeting_config.days = 7 * 20
         populate_example_meetings(self.meeting_config)
         form = HouseholdForm()

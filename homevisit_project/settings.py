@@ -39,6 +39,9 @@ EMAIL_PORT = os.getenv("EMAIL_PORT", 587)
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
+# Homevisit-specific settings
+HOMEVISIT_HIDE_WEEKS_AFTER = int(os.getenv("HOMEVISIT_HIDE_WEEKS_AFTER", 12))
+
 # Application definition
 
 INSTALLED_APPS = [
