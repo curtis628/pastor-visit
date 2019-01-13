@@ -61,12 +61,13 @@ class IndexViewTests(TestCase):
         first_name = "TestFirst"
         last_name = "TestLast"
         email = "user@test.com"
+        phone = "5307777777"
         address = "Test Address"
         meeting_choice = Meeting.objects.all()[0]
         data = {
             "ownerForm-first_name": first_name,
             "ownerForm-last_name": last_name,
-            "ownerForm-phone_number": "5307777777",
+            "ownerForm-phone_number": phone,
             "ownerForm-email": email,
             "address": address,
             "meeting": meeting_choice.id,
@@ -89,6 +90,7 @@ class IndexViewTests(TestCase):
         self.assertEqual(last_name, person.last_name)
         self.assertEqual(f"{first_name} {last_name}", person.full_name)
         self.assertEqual(person.full_name, house.owner_name())
+        self.assertEqual(phone, house.owner_phone())
 
         self.assertEqual(1, house.meeting_set.count())
         meeting = house.meeting_set.all().get()

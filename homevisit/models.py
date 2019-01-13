@@ -28,11 +28,19 @@ class Household(models.Model):
     address = models.TextField()
     notes = models.TextField(blank=True)
 
-    def owner_name(self):
+    def _get_owner(self):
         owner_query = self.person_set.all()
-        return str(owner_query[0]) if owner_query else None
+        return owner_query[0] if owner_query else None
+
+    def owner_name(self):
+        owner = self._get_owner()
+        return str(owner) if owner else None
 
     owner_name.admin_order_field = "person__first_name"  # type: ignore
+
+    def owner_phone(self):
+        owner = self._get_owner()
+        return owner.phone_number if owner else None
 
     def upcoming_meeting(self):
         now = timezone.now()
