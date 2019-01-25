@@ -90,6 +90,14 @@ class Weekdays(IntEnum):
     SUN = 6
 
 
+class MeetingGroup(models.Model):
+    name = models.CharField(max_length=50)
+    date = models.DateField(validators=[validate_future_date])
+
+    def __str__(self):
+        return self.name
+
+
 class Meeting(models.Model):
     name = models.CharField(max_length=50)
     start = models.DateTimeField(validators=[validate_future_date])
@@ -99,6 +107,9 @@ class Meeting(models.Model):
     )
     household = models.ForeignKey(
         Household, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    group = models.ForeignKey(
+        MeetingGroup, on_delete=models.CASCADE, null=True, blank=True
     )
 
     def clean(self):
