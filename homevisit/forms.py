@@ -8,7 +8,7 @@ from django.urls import reverse
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field, Submit
 
-from .models import Household, Person, Meeting, Feedback
+from .models import Household, Person, Meeting, MeetingGroup, Feedback
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +17,18 @@ def get_meetings():
     now = timezone.now()
     max_start = now + timedelta(weeks=settings.HOMEVISIT_HIDE_WEEKS_AFTER)
 
-    mtg_query = (
-        Meeting.objects.filter(start__gt=now)
-        .filter(start__lt=max_start)
-        .filter(household=None)
-        .order_by("start")
+    mtg_group_query = (
+        MeetingGroup.objects
+            .filter(date__gt=now)
+            .filter(date__lt=max_start)
+            .exclude(meeting__household__isnull=False)
+            .order_by("date")
     )
 
     weeks_list = []
-    for mtg in mtg_query:
-        weeks_list.append((mtg.id, mtg))
+    for group in mtg_group_query:
+        for mtg in group.meeting_set.all():
+            weeks_list.append((mtg.id, mtg))
 
     return weeks_list
 

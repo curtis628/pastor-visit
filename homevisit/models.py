@@ -109,7 +109,7 @@ class Meeting(models.Model):
         Household, on_delete=models.SET_NULL, null=True, blank=True
     )
     group = models.ForeignKey(
-        MeetingGroup, on_delete=models.CASCADE, null=True, blank=True
+        MeetingGroup, on_delete=models.CASCADE
     )
 
     def clean(self):
