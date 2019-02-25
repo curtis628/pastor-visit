@@ -9,4 +9,5 @@ urlpatterns = [
     path("contact", views.ContactUsCreateView.as_view(), name="contact"),
     path("contact/success", views.ContactUsSuccessView.as_view(), name="contact_success"),
     path("faqs", views.FaqListView.as_view(), name="faqs"),
+    path("ajax/load-times", views.load_times, name="ajax_load_times"),
 ]

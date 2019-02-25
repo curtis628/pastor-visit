@@ -12,6 +12,8 @@ from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 DATE_FORMAT = "%a, %b. %-d, %Y %-I:%M %p"
+DATE_ONLY_FORMAT = "%a, %b. %-d, %Y"
+TIME_ONLY_NO_SUFFIX_FORMAT = "%-I:%M"
 TIME_ONLY_FORMAT = "%-I:%M %p"
 
 logger = logging.getLogger(__name__)
@@ -93,6 +95,9 @@ class Weekdays(IntEnum):
 class MeetingGroup(models.Model):
     name = models.CharField(max_length=50)
     date = models.DateField(validators=[validate_future_date])
+
+    def date_string(self):
+        return self.date.strftime(DATE_ONLY_FORMAT)
 
     def __str__(self):
         return self.name
@@ -181,6 +186,13 @@ class Meeting(models.Model):
         return f"{self.name}: {str(self)}"
 
     full_name.admin_order_field = "start"  # type: ignore
+
+    def time_only(self):
+        start_local = timezone.localtime(self.start)
+        start_str = start_local.strftime(TIME_ONLY_NO_SUFFIX_FORMAT)
+        end_local = timezone.localtime(self.end)
+        end_str = end_local.strftime(TIME_ONLY_FORMAT)
+        return f"{start_str} - {end_str}"
 
     def __str__(self):
         start_local = timezone.localtime(self.start)

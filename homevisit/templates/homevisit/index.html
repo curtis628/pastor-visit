@@ -8,7 +8,7 @@
   {% if no_meetings_error %}
     {% include "homevisit/no_meetings.html" %}
   {% else %}
-    <form action="{% url 'index' %}" method="post">
+    <form id="householdForm" action="{% url 'index' %}" data-times-url="{% url 'ajax_load_times' %}" method="post">
       {% csrf_token %}
       {% crispy owner_form %}
       {% crispy form %}
@@ -17,3 +17,20 @@
   {% endif %}
 {% endblock %}
 
+{% block scripts %}
+  <script>
+    $("#id_meeting_dates").change(function () {
+      var url = $("#householdForm").attr("data-times-url");
+      var groupId = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'group': groupId
+        },
+        success: function (data) {
+          $("#id_meeting").html(data);
+        }
+      });
+    });
+  </script>
+{% endblock %}

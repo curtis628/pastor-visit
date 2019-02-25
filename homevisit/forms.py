@@ -13,7 +13,7 @@ from .models import Household, Person, Meeting, MeetingGroup, Feedback
 logger = logging.getLogger(__name__)
 
 
-def get_meetings():
+def get_meeting_dates():
     now = timezone.now()
     max_start = now + timedelta(weeks=settings.HOMEVISIT_HIDE_WEEKS_AFTER)
 
@@ -25,22 +25,27 @@ def get_meetings():
             .order_by("date")
     )
 
-    weeks_list = []
+    weeks_list = [("", "Select available date here...")]
     for group in mtg_group_query:
-        for mtg in group.meeting_set.all():
-            weeks_list.append((mtg.id, mtg))
-
+        weeks_list.append((group.id, group.date_string()))
     return weeks_list
 
 
 class HouseholdForm(forms.ModelForm):
-    meeting = forms.ChoiceField(
-        label="Choose Meeting",
-        choices=get_meetings,
+    meeting_dates = forms.ChoiceField(
+        label="Choose meeting date",
+        choices=get_meeting_dates,
         error_messages={
-            "invalid_choice": "This meeting is not currently available. Please retry."
+            "invalid_choice": "This date is not currently available. Please retry."
         },
-        help_text='<a href="/faqs#no-availability">What if none of these times work for me?</a>',  # noqa
+        help_text='<a href="/faqs#no-availability">What if none of these dates/times work for me?</a>',  # noqa
+    )
+
+    meeting = forms.CharField(
+        label="Choose meeting time",
+        max_length=254,
+        widget=forms.Select(),
+        help_text="Choose meeting date first",
     )
 
     class Meta:
@@ -53,7 +58,18 @@ class HouseholdForm(forms.ModelForm):
 
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.helper.layout = Layout("address", "meeting")
+
+        self.helper.layout = Layout(
+            Div(
+                Field("address", wrapper_class="col-md-12"),
+                css_class="row",
+            ),
+            Div(
+                Field("meeting_dates", wrapper_class="col-md-6"),
+                Field("meeting", wrapper_class="col-md-6"),
+                css_class="row",
+            ),
+        )
 
     def clean(self):
         super().clean()
