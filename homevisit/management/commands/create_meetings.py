@@ -5,7 +5,7 @@ import pytz
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 
-from homevisit.models import Meeting, Weekdays
+from homevisit.models import MeetingGroup, Meeting, Weekdays
 
 logger = logging.getLogger(__name__)
 DATE_FORMAT = "%Y-%m-%d"
@@ -48,8 +48,10 @@ class Command(BaseCommand):
             type=_valid_date,
         )
         parser.add_argument(
-            "start_time",
-            help="The meeting's starting time: HH:MM (24 clock)",
+            "start_times",
+            help="The meeting's starting times: HH:MM (24 clock)",
+            metavar="time",
+            nargs="+",
             type=_valid_time,
         )
         parser.add_argument(
@@ -70,7 +72,7 @@ class Command(BaseCommand):
         name = options["name"]
         begin_date = options["begin_date"]
         final_date = options["final_date"]
-        start_time = options["start_time"]
+        start_times = options["start_times"]
         duration_mins = options["duration_mins"]
         days = options["days"]
 
@@ -79,21 +81,38 @@ class Command(BaseCommand):
             f"          name: {name}\n"
             f"    begin_date: {str(begin_date)}\n"
             f"    final_date: {str(final_date)}\n"
-            f"    start_time: {str(start_time)}\n"
+            f"   start_times: {str(start_times)}\n"
             f" duration_mins: {duration_mins}\n"
-            f"          days: {days}"
+            f"          days: {days}\n"
         )
 
-        date_pst = pacific.localize(datetime.combine(begin_date, start_time))
+        date_pst = pacific.localize(datetime.combine(begin_date, start_times[0]))
         while date_pst.date() <= final_date:
             weekday = date_pst.weekday()
+            date_only_pst = date_pst.date()
             if Weekdays(weekday).name in days:
-                meeting_start_pst = pacific.localize(
-                    datetime.combine(date_pst.date(), start_time)
+                group = MeetingGroup(
+                    name=f"{name}: {str(date_only_pst)}", date=date_only_pst
                 )
-                meeting_start_utc = meeting_start_pst.astimezone(pytz.utc)
-                meeting_end_utc = meeting_start_utc + timedelta(minutes=duration_mins)
-                meeting = Meeting(name=name, start=meeting_start_utc, end=meeting_end_utc)
-                meeting.save()
-                self.stdout.write(self.style.SUCCESS(f"Created meeting: {str(meeting)}"))
+                group.save()
+                self.stdout.write(
+                    self.style.SUCCESS(f"Created meeting group: {str(group)}")
+                )
+                for start_time in start_times:
+                    meeting_start_pst = pacific.localize(
+                        datetime.combine(date_only_pst, start_time)
+                    )
+                    meeting_start_utc = meeting_start_pst.astimezone(pytz.utc)
+                    meeting_end_utc = meeting_start_utc + timedelta(minutes=duration_mins)
+                    meeting = Meeting(
+                        name=name,
+                        start=meeting_start_utc,
+                        end=meeting_end_utc,
+                        group=group,
+                    )
+                    meeting.save()
+                    self.stdout.write(
+                        self.style.SUCCESS(f"    Created meeting: {str(meeting)}")
+                    )
             date_pst = date_pst + timedelta(days=1)
+        self.stdout.write(self.style.SUCCESS(f"Done!\n"))
