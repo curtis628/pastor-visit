@@ -113,9 +113,7 @@ class Meeting(models.Model):
     household = models.ForeignKey(
         Household, on_delete=models.SET_NULL, null=True, blank=True
     )
-    group = models.ForeignKey(
-        MeetingGroup, on_delete=models.CASCADE
-    )
+    group = models.ForeignKey(MeetingGroup, on_delete=models.CASCADE)
 
     def clean(self):
         if self.end <= self.start:
@@ -138,6 +136,7 @@ class Meeting(models.Model):
         weekdays: List[Weekdays],
         start_times: List[time],
         create_after: datetime = None,
+        group: MeetingGroup = None,
     ) -> None:
         """Creates recurring Meeting instances based on parameters.
 
@@ -158,6 +157,11 @@ class Meeting(models.Model):
         _create_after: datetime = timezone.now() if create_after is None else create_after
         initial_date: date = begin_date
         delta = end_date - initial_date
+
+        if not group:
+            group = MeetingGroup(name=f"{name} group: {begin_date}", date=begin_date)
+            group.save()
+
         # Iterate over each day between _create_after and end_date
         for day_num in range(delta.days):
             loop_date = initial_date + timedelta(days=day_num)
@@ -172,7 +176,7 @@ class Meeting(models.Model):
                     # Create the meeting if start_time is later than _create_after
                     if mtg_start > _create_after:
                         mtg = Meeting.objects.create(
-                            name=name, start=mtg_start, end=mtg_end
+                            name=name, start=mtg_start, end=mtg_end, group=group
                         )
                         logger.info("Created %s", mtg)
 

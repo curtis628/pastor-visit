@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.conf import settings
 
 from .forms import OwnerForm, HouseholdForm
-from .models import Meeting
+from .models import Meeting, MeetingGroup
 from .test_models import RecurringMeetingTestConfig, populate_example_meetings
 
 
@@ -52,7 +52,7 @@ class HouseholdFormTests(TestCase):
         populate_example_meetings(self.meeting_config)
 
     def _clean_setup_data(self):
-        Meeting.objects.all().delete()
+        MeetingGroup.objects.all().delete()
 
     def _verify_error(self, form_errors, expected_key, expected_substring):
         self.assertIn(expected_key, form_errors)
@@ -65,7 +65,7 @@ class HouseholdFormTests(TestCase):
 
     def test_initial_form(self):
         form = HouseholdForm()
-        meeting_choice_field = form.fields["meeting"]
+        meeting_choice_field = form.fields["meeting_dates"]
 
         # choices should be pre-populated by default, due to setUp() method
         choices = [choice for choice in meeting_choice_field.choices]
@@ -73,24 +73,31 @@ class HouseholdFormTests(TestCase):
 
     def test_initial_form_no_meetings(self):
         self._clean_setup_data()
-        # form = HouseholdForm()
-        # meeting_choice_field = form.fields["meeting"]
-        # TODO what should happen?
+        form = HouseholdForm()
+        meeting_choice_field = form.fields["meeting_dates"]
+
+        # no choices _real_ choices are available... just the 'Select' one
+        choices = [choice for choice in meeting_choice_field.choices]
+        self.assertTrue(len(choices) == 1)
+        self.assertEqual("", choices[0][0])
 
     def test_required_fields(self):
         form_data = dict()
         form = self._verify_form(form_data, False)
-        self.assertEqual(2, len(form.errors))
+        self.assertEqual(3, len(form.errors))
         self._verify_error(form.errors, "address", "required")
+        self._verify_error(form.errors, "meeting_dates", "required")
         self._verify_error(form.errors, "meeting", "required")
 
         form_data = dict(address="TestAddress")
         form = self._verify_form(form_data, False)
-        self.assertEqual(1, len(form.errors))
+        self.assertEqual(2, len(form.errors))
+        self._verify_error(form.errors, "meeting_dates", "required")
         self._verify_error(form.errors, "meeting", "required")
 
-        meeting_choice = Meeting.objects.all()[0]
-        form_data = dict(meeting=meeting_choice.id)
+        meeting_group = MeetingGroup.objects.all()[0]
+        meeting_choice = meeting_group.meeting_set.first()
+        form_data = dict(meeting_dates=meeting_group.id, meeting=meeting_choice.id)
         form = self._verify_form(form_data, False)
         self.assertEqual(1, len(form.errors))
         self._verify_error(form.errors, "address", "required")
@@ -106,7 +113,7 @@ class HouseholdFormTests(TestCase):
         form = HouseholdForm()
 
         # ensure that all meetings aren't shown on form's select choice
-        choices = [choice for choice in form.fields["meeting"].choices]
+        choices = [choice for choice in form.fields["meeting_dates"].choices]
         choice_count = len(choices)
         total_count = Meeting.objects.count()
         self.assertTrue(
@@ -115,8 +122,11 @@ class HouseholdFormTests(TestCase):
         )
 
     def test_valid(self):
-        meeting_choice = Meeting.objects.all()[0]
-        form_data = dict(address="Test Address Value", meeting=meeting_choice.id)
+        group = MeetingGroup.objects.all()[0]
+        meeting = group.meeting_set.first()
+        form_data = dict(
+            address="Test Address Value", meeting_dates=group.id, meeting=meeting.id
+        )
         form = self._verify_form(form_data, True)
 
-        self.assertEqual(meeting_choice, form.cleaned_data["meeting_obj"])
+        self.assertEqual(meeting, form.cleaned_data["meeting_obj"])

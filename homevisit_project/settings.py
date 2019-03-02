@@ -133,14 +133,6 @@ X_FRAME_OPTIONS = "DENY"
 # Don't log to console during tests: https://stackoverflow.com/questions/5255657
 TESTING_MODE = len(sys.argv) > 1 and sys.argv[1] == "test"
 
-if not TESTING_MODE:
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
-
 
 class NotInTestingFilter(Filter):
     def filter(self, record):

@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 import pytz
 
 
-from .models import Household, Person, Meeting, Weekdays
+from .models import Household, Person, MeetingGroup, Meeting, Weekdays
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,13 @@ def create_person(first_name, last_name, email, phone_number=None, household=Non
     return person
 
 
-def create_meeting(start, end, reserved=None, household=None, name="Test meeting"):
-    meeting = Meeting(name=name, start=start, end=end)
+def create_meeting(
+    start, end, reserved=None, household=None, name="Test meeting", group=None
+):
+    if not group:
+        group = MeetingGroup(name="Single: " + str(start.date()), date=start.date())
+        group.save()
+    meeting = Meeting(name=name, start=start, end=end, group=group)
     if reserved:
         meeting.reserved = reserved
     if household:
@@ -89,11 +94,12 @@ class RecurringMeetingTestConfig:
         time(20, 30, 0),  # after  "MOCK_NOW". 12:30PM PST
         time(22, 0, 0),  # after  "MOCK_NOW". 02:00PM PST
     ]
+    group: Optional[MeetingGroup] = None
 
     def __str__(self):
         return (
-            f"{self.name}: [start={self.start_dt}] [days={self.days}] {self.weekdays}."
-            f"times: {self.start_times}"
+            f"{self.name} ({self.group}): [start={self.start_dt}] [days={self.days}]"
+            f" {self.weekdays}.\ntimes: {self.start_times}"
         )
 
 
@@ -116,6 +122,11 @@ def populate_example_meetings(
     name = config.name if config.name else "Test recurring meeting"
     start_dt: date = config.start_dt if config.start_dt else now.date()
     end_dt: date = start_dt + timedelta(days=config.days)
+    group: Optional[MeetingGroup] = config.group
+    if not group:
+        group = MeetingGroup(name="Single: " + str(start_dt), date=start_dt)
+        group.save()
+
     Meeting.schedule_recurring(
         name,
         start_dt,
@@ -124,6 +135,7 @@ def populate_example_meetings(
         config.weekdays,
         config.start_times,
         create_after=now,
+        group=group,
     )
 
 

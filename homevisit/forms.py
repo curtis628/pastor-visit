@@ -14,15 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_meeting_dates():
-    now = timezone.now()
+    now = timezone.now().date()
     max_start = now + timedelta(weeks=settings.HOMEVISIT_HIDE_WEEKS_AFTER)
 
     mtg_group_query = (
-        MeetingGroup.objects
-            .filter(date__gt=now)
-            .filter(date__lt=max_start)
-            .exclude(meeting__household__isnull=False)
-            .order_by("date")
+        MeetingGroup.objects.filter(date__gte=now)
+        .filter(date__lte=max_start)
+        .exclude(meeting__household__isnull=False)
+        .order_by("date")
     )
 
     weeks_list = [("", "Select available date here...")]
@@ -60,10 +59,7 @@ class HouseholdForm(forms.ModelForm):
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
-            Div(
-                Field("address", wrapper_class="col-md-12"),
-                css_class="row",
-            ),
+            Div(Field("address", wrapper_class="col-md-12"), css_class="row"),
             Div(
                 Field("meeting_dates", wrapper_class="col-md-6"),
                 Field("meeting", wrapper_class="col-md-6"),

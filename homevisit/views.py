@@ -56,11 +56,14 @@ def send_email(subject, body, from_email, to_email, cc_emails=[]):
     email.content_subtype = "html"
     email.send(fail_silently=False)
 
+
 def load_times(request):
     group_id = request.GET.get("group")
     group = MeetingGroup.objects.get(pk=group_id)
     meetings = group.meeting_set.all()
-    return render(request, 'homevisit/times_dropdown_list_options.html', {"meetings": meetings})
+    return render(
+        request, "homevisit/times_dropdown_list_options.html", {"meetings": meetings}
+    )
 
 
 class HouseholdCreateView(CreateView):
@@ -75,7 +78,7 @@ class HouseholdCreateView(CreateView):
         meeting_field = household_form.fields["meeting_dates"]
         meeting_choices = [choice for choice in meeting_field.choices]
         meeting_nums = len(meeting_choices)
-        if meeting_nums == 0:
+        if meeting_nums == 1:
             logger.warning("There are no meetings to choose from!")
             context["no_meetings_error"] = True
         return context

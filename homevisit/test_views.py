@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Household, Person, Meeting, Feedback
+from .models import Household, Person, MeetingGroup, Feedback
 from .forms import HouseholdForm, OwnerForm
 from .test_models import RecurringMeetingTestConfig, populate_example_meetings
 from .views import SUBJECT
@@ -39,7 +39,7 @@ class IndexViewTests(TestCase):
 
     def test_index_view_no_meetings(self):
         # Delete the meetings created in setUp...
-        Meeting.objects.all().delete()
+        MeetingGroup.objects.all().delete()
 
         response = self.client.get(reverse("index"))
         self.assertEqual(200, response.status_code)
@@ -63,13 +63,15 @@ class IndexViewTests(TestCase):
         email = "user@test.com"
         phone = "5307777777"
         address = "Test Address"
-        meeting_choice = Meeting.objects.all()[0]
+        group = MeetingGroup.objects.all()[0]
+        meeting_choice = group.meeting_set.first()
         data = {
             "ownerForm-first_name": first_name,
             "ownerForm-last_name": last_name,
             "ownerForm-phone_number": phone,
             "ownerForm-email": email,
             "address": address,
+            "meeting_dates": group.id,
             "meeting": meeting_choice.id,
         }
         response = self.client.post(reverse("index"), data, follow=True)
@@ -116,11 +118,13 @@ class IndexViewTests(TestCase):
         response = self.client.get(reverse("index"))
         self.assertEqual(200, response.status_code)
 
-        # ... there should be one-less Meeting choice to select from
+        # ... there should be one-less Meeting group to select from
         choices = [
-            choice for choice in response.context["form"].fields["meeting"].choices
+            choice for choice in response.context["form"].fields["meeting_dates"].choices
         ]
-        self.assertEqual(Meeting.objects.count() - 1, len(choices))
+        # NOTE: Add 1 to account for default choice of "Select available date..."
+        #       Subtract 1 to account for the MeetingGroup that was just reserved earlier
+        self.assertEqual(MeetingGroup.objects.count() + 1 - 1, len(choices))
 
         # ... and the meeting_choice.id we just reserved shouldn't be an option
         meeting_choice_ids = [_id for (_id, _) in choices]
@@ -131,19 +135,21 @@ class IndexViewTests(TestCase):
         # Disable emails for this test
         settings.EMAIL_HOST_USER = None
 
-        # User1 and User2 will attempt to reserve this same meeting instance
-        meeting_choice = Meeting.objects.all()[0]
+        # User1 and User2 will attempt to reserve this same meeting group instance
+        group = MeetingGroup.objects.all()[0]
+        user1_meeting = group.meeting_set.first()
+        user2_meeting = group.meeting_set.last()
 
-        # To begin with, this meeting choice is available for both users
+        # To begin with, these meeting choices are available for both users
         response = self.client.get(reverse("index"))
         self.assertEqual(200, response.status_code)
         choices = [
-            choice for choice in response.context["form"].fields["meeting"].choices
+            choice for choice in response.context["form"].fields["meeting_dates"].choices
         ]
-        meeting_choice_ids = [_id for (_id, _) in choices]
-        self.assertIn(meeting_choice.id, meeting_choice_ids)
+        meeting_date_ids = [_id for (_id, _) in choices]
+        self.assertIn(group.id, meeting_date_ids)
 
-        # Both users fill out the form, attempting to reserve the same meeting_choice
+        # Both users fill out form, attempting to reserve a meeting from the same group
         user1_first_name = "User1"
         user1_address = "User 1 Address"
         user1_data = {
@@ -152,7 +158,8 @@ class IndexViewTests(TestCase):
             "ownerForm-email": "user1@test.com",
             "ownerForm-phone_number": "",
             "address": user1_address,
-            "meeting": meeting_choice.id,
+            "meeting_dates": group.id,
+            "meeting": user1_meeting.id,
         }
 
         user2_first_name = "User2"
@@ -163,7 +170,8 @@ class IndexViewTests(TestCase):
             "ownerForm-email": "user2@test.com",
             "ownerForm-phone_number": "",
             "address": user2_address,
-            "meeting": meeting_choice.id,
+            "meeting_dates": group.id,
+            "meeting": user2_meeting.id,
         }
 
         # User 1: submits first (and is successful). NOTE: The view's POST is atomic.
@@ -188,7 +196,7 @@ class IndexViewTests(TestCase):
         form = response.context["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
-        self.assertIn("meeting is not currently available", form.errors["meeting"][0])
+        self.assertIn("date is not currently available", form.errors["meeting_dates"][0])
 
         # Verify User 1 saved and reserved
         self.assertEqual(1, Person.objects.filter(first_name=user1_first_name).count())
@@ -196,7 +204,7 @@ class IndexViewTests(TestCase):
         user1 = Person.objects.get(first_name=user1_first_name)
         self.assertIsNotNone(user1.household)
         self.assertEqual(1, user1.household.meeting_set.count())
-        self.assertEqual(meeting_choice, user1.household.meeting_set.get())
+        self.assertEqual(user1_meeting, user1.household.meeting_set.get())
 
         # Verify User 2' data is not saved
         self.assertEqual(0, Person.objects.filter(first_name=user2_first_name).count())
@@ -204,6 +212,19 @@ class IndexViewTests(TestCase):
 
         # No emails are sent because they are disabled
         mock_mail.assert_not_called()
+
+    def test_ajax_load_times(self):
+        group = MeetingGroup.objects.first()
+        body = {"group": group.id}
+        response = self.client.get(reverse("ajax_load_times"), body)
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(
+            "homevisit/times_dropdown_list_options.html",
+            [template.name for template in response.templates],
+        )
+        self.assertIn("meetings", response.context)
+        self.assertEqual(group.meeting_set.count(), len(response.context["meetings"]))
 
 
 class ContactUsViewTests(TestCase):

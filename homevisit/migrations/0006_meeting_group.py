@@ -7,22 +7,36 @@ import homevisit.models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('homevisit', '0005_household_meeting_set_null'),
-    ]
+    dependencies = [("homevisit", "0005_household_meeting_set_null")]
 
     operations = [
         migrations.CreateModel(
-            name='MeetingGroup',
+            name="MeetingGroup",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
-                ('date', models.DateField(validators=[homevisit.models.validate_future_date])),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50)),
+                (
+                    "date",
+                    models.DateField(validators=[homevisit.models.validate_future_date]),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='meeting',
-            name='group',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='homevisit.MeetingGroup'),
+            model_name="meeting",
+            name="group",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="homevisit.MeetingGroup",
+            ),
         ),
     ]
