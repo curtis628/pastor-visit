@@ -40,7 +40,7 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 # Homevisit-specific settings
-HOMEVISIT_HIDE_WEEKS_AFTER = int(os.getenv("HOMEVISIT_HIDE_WEEKS_AFTER", 12))
+HOMEVISIT_HIDE_WEEKS_AFTER = int(os.getenv("HOMEVISIT_HIDE_WEEKS_AFTER", 52))
 
 # Application definition
 
@@ -132,6 +132,14 @@ X_FRAME_OPTIONS = "DENY"
 
 # Don't log to console during tests: https://stackoverflow.com/questions/5255657
 TESTING_MODE = len(sys.argv) > 1 and sys.argv[1] == "test"
+
+if not TESTING_MODE:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
 
 
 class NotInTestingFilter(Filter):
