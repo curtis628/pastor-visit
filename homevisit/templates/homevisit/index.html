@@ -19,18 +19,24 @@
 
 {% block scripts %}
   <script>
-    $("#id_meeting_dates").change(function () {
-      var url = $("#householdForm").attr("data-times-url");
-      var groupId = $(this).val();
-      $.ajax({
-        url: url,
-        data: {
-          'group': groupId
-        },
-        success: function (data) {
-          $("#id_meeting").html(data);
-        }
-      });
-    });
+    function populateTimes() {
+      var groupId = $("#id_meeting_dates").val();
+      if (groupId != null && groupId != "") {
+        var url = $("#householdForm").attr("data-times-url");
+        $.ajax({
+          url: url,
+          data: {
+            'group': groupId
+          },
+          success: function (data) {
+            $("#id_meeting").html(data);
+          }
+        });
+      }
+    }
+
+    $( document ).ready(populateTimes);
+    $("#id_meeting_dates").change(populateTimes);
+
   </script>
 {% endblock %}
